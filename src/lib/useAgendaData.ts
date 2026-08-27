@@ -102,7 +102,6 @@ const [settingsRes, exceptionsRes] = await Promise.all([
   supabase.from("settings").select("*").eq("id", 1).single(),
   fetchAllExceptions(supabase),
 ]);
-    ]);
 
     if (settingsRes.error || exceptionsRes.error) {
       setState((prev) => ({
