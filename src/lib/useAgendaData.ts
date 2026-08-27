@@ -56,33 +56,6 @@ async function fetchAllExceptions(supabase: ReturnType<typeof createClient>) {
  * La pagination évite donc de perdre les exceptions lorsque la table dépasse
  * cette limite.
  */
-async function fetchAllExceptions(supabase: ReturnType<typeof createClient>) {
-  const pageSize = 1000;
-  let from = 0;
-  const allRows: SlotException[] = [];
-
-  while (true) {
-    const { data, error } = await supabase
-      .from("slot_exceptions")
-      .select("*")
-      .range(from, from + pageSize - 1);
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    const rows = (data ?? []) as SlotException[];
-    allRows.push(...rows);
-
-    if (rows.length < pageSize) {
-      break;
-    }
-
-    from += pageSize;
-  }
-
-  return { data: allRows, error: null };
-}
 
 export function useAgendaData() {
   const supabase = useRef(createClient()).current;
