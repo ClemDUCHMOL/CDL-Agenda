@@ -8,56 +8,37 @@ interface AgendaDataState {
   settings: Settings | null;
   exceptions: ExceptionsMap;
   loading: boolean;
-  /** true = jamais réussi à charger -> ne pas afficher un calendrier "tout vert" */
   initialLoadError: boolean;
-  /** true = un chargement précédent a réussi, mais le rafraîchissement a échoué -> données potentiellement obsolètes */
   refreshError: boolean;
 }
 
 function toExceptionsMap(rows: SlotException[]): ExceptionsMap {
   const map: ExceptionsMap = {};
+
   for (const row of rows) {
     map[`${row.date}_${row.slot}`] = row;
   }
+
   return map;
-}
-async function fetchAllExceptions(supabase: ReturnType<typeof createClient>) {
-  const pageSize = 1000;
-  let from = 0;
-  const allRows: SlotException[] = [];
-
-  while (true) {
-    const { data, error } = await supabase
-      .from("slot_exceptions")
-      .select("*")
-      .range(from, from + pageSize - 1);
-
-    if (error) {
-      return { data: null, error };
-    }
-
-    const rows = (data ?? []) as SlotException[];
-    allRows.push(...rows);
-
-    if (rows.length < pageSize) {
-      break;
-    }
-
-    from += pageSize;
-  }
-
-  return { data: allRows, error: null };
 }
 
 /**
- * Récupère toutes les exceptions Supabase par pages de 1000.
+ * Calcule la période de chargement autour du mois affiché.
  *
- * Supabase limite par défaut le nombre de lignes retournées par une requête.
- * La pagination évite donc de perdre les exceptions lorsque la table dépasse
- * cette limite.
+ * On charge le mois précédent, le mois courant et le mois suivant.
+ * Cela évite de récupérer inutilement toute la table slot_exceptions.
  */
+function getExceptionDateRange(year: number, month: number) {
+  const from = new Date(Date.UTC(year, month - 1, 1));
+  const to = new Date(Date.UTC(year, month + 2, 1));
 
-export function useAgendaData() {
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+  };
+}
+
+export function useAgendaData(year: number, month: number) {
   const supabase = useRef(createClient()).current;
 
   const [state, setState] = useState<AgendaDataState>({
@@ -71,10 +52,17 @@ export function useAgendaData() {
   const hasLoadedOnce = useRef(false);
 
   const fetchAll = useCallback(async () => {
-const [settingsRes, exceptionsRes] = await Promise.all([
-  supabase.from("settings").select("*").eq("id", 1).single(),
-  fetchAllExceptions(supabase),
-]);
+    const { from, to } = getExceptionDateRange(year, month);
+
+    const [settingsRes, exceptionsRes] = await Promise.all([
+      supabase.from("settings").select("*").eq("id", 1).single(),
+
+      supabase
+        .from("slot_exceptions")
+        .select("*")
+        .gte("date", from)
+        .lt("date", to),
+    ]);
 
     if (settingsRes.error || exceptionsRes.error) {
       setState((prev) => ({
@@ -90,12 +78,14 @@ const [settingsRes, exceptionsRes] = await Promise.all([
 
     setState({
       settings: settingsRes.data as Settings,
-      exceptions: toExceptionsMap(exceptionsRes.data ?? []),
+      exceptions: toExceptionsMap(
+        (exceptionsRes.data ?? []) as SlotException[]
+      ),
       loading: false,
       initialLoadError: false,
       refreshError: false,
     });
-  }, [supabase]);
+  }, [supabase, year, month]);
 
   useEffect(() => {
     fetchAll();
@@ -136,8 +126,7 @@ const [settingsRes, exceptionsRes] = await Promise.all([
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchAll, supabase]);
 
   return {
     ...state,
