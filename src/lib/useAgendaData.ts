@@ -52,21 +52,25 @@ export function useAgendaData(year?: number, month?: number) {
   const hasLoadedOnce = useRef(false);
 
   const fetchAll = useCallback(async () => {
-    const { from, to } =const dateRange =
-  year !== undefined && month !== undefined
-    ? getExceptionDateRange(year, month)
-    : null; getExceptionDateRange(year, month);
+    const dateRange =
+      year !== undefined && month !== undefined
+        ? getExceptionDateRange(year, month)
+        : null;
 
     const [settingsRes, exceptionsRes] = await Promise.all([
-      supabase.from("settings").select("*").eq("id", 1).single(),
+      supabase
+        .from("settings")
+        .select("*")
+        .eq("id", 1)
+        .single(),
 
-dateRange
-  ? supabase
-      .from("slot_exceptions")
-      .select("*")
-      .gte("date", dateRange.from)
-      .lt("date", dateRange.to)
-  : supabase.from("slot_exceptions").select("*"),
+      dateRange
+        ? supabase
+            .from("slot_exceptions")
+            .select("*")
+            .gte("date", dateRange.from)
+            .lt("date", dateRange.to)
+        : supabase.from("slot_exceptions").select("*"),
     ]);
 
     if (settingsRes.error || exceptionsRes.error) {
