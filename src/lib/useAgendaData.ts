@@ -38,7 +38,7 @@ function getExceptionDateRange(year: number, month: number) {
   };
 }
 
-export function useAgendaData(year: number, month: number) {
+export function useAgendaData(year?: number, month?: number) {
   const supabase = useRef(createClient()).current;
 
   const [state, setState] = useState<AgendaDataState>({
@@ -52,16 +52,21 @@ export function useAgendaData(year: number, month: number) {
   const hasLoadedOnce = useRef(false);
 
   const fetchAll = useCallback(async () => {
-    const { from, to } = getExceptionDateRange(year, month);
+    const { from, to } =const dateRange =
+  year !== undefined && month !== undefined
+    ? getExceptionDateRange(year, month)
+    : null; getExceptionDateRange(year, month);
 
     const [settingsRes, exceptionsRes] = await Promise.all([
       supabase.from("settings").select("*").eq("id", 1).single(),
 
-      supabase
-        .from("slot_exceptions")
-        .select("*")
-        .gte("date", from)
-        .lt("date", to),
+dateRange
+  ? supabase
+      .from("slot_exceptions")
+      .select("*")
+      .gte("date", dateRange.from)
+      .lt("date", dateRange.to)
+  : supabase.from("slot_exceptions").select("*"),
     ]);
 
     if (settingsRes.error || exceptionsRes.error) {
