@@ -22,8 +22,44 @@ function toExceptionsMap(rows: SlotException[]): ExceptionsMap {
   return map;
 }
 
+/**
+ * Récupère toutes les exceptions Supabase par pages de 1000.
+ *
+ * Supabase limite par défaut le nombre de lignes retournées par une requête.
+ * La pagination évite donc de perdre les exceptions lorsque la table dépasse
+ * cette limite.
+ */
+async function fetchAllExceptions(supabase: ReturnType<typeof createClient>) {
+  const pageSize = 1000;
+  let from = 0;
+  const allRows: SlotException[] = [];
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("slot_exceptions")
+      .select("*")
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    const rows = (data ?? []) as SlotException[];
+    allRows.push(...rows);
+
+    if (rows.length < pageSize) {
+      break;
+    }
+
+    from += pageSize;
+  }
+
+  return { data: allRows, error: null };
+}
+
 export function useAgendaData() {
   const supabase = useRef(createClient()).current;
+
   const [state, setState] = useState<AgendaDataState>({
     settings: null,
     exceptions: {},
@@ -31,12 +67,13 @@ export function useAgendaData() {
     initialLoadError: false,
     refreshError: false,
   });
+
   const hasLoadedOnce = useRef(false);
 
   const fetchAll = useCallback(async () => {
     const [settingsRes, exceptionsRes] = await Promise.all([
       supabase.from("settings").select("*").eq("id", 1).single(),
-      supabase.from("slot_exceptions").select("*"),
+      fetchAllExceptions(supabase),
     ]);
 
     if (settingsRes.error || exceptionsRes.error) {
@@ -50,9 +87,10 @@ export function useAgendaData() {
     }
 
     hasLoadedOnce.current = true;
+
     setState({
       settings: settingsRes.data as Settings,
-      exceptions: toExceptionsMap((exceptionsRes.data ?? []) as SlotException[]),
+      exceptions: toExceptionsMap(exceptionsRes.data ?? []),
       loading: false,
       initialLoadError: false,
       refreshError: false,
@@ -64,15 +102,34 @@ export function useAgendaData() {
 
     const channel = supabase
       .channel("agenda-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "slot_exceptions" }, () => {
-        fetchAll();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "settings" }, () => {
-        fetchAll();
-      })
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "slot_exceptions",
+        },
+        () => {
+          fetchAll();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "settings",
+        },
+        () => {
+          fetchAll();
+        }
+      )
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          setState((prev) => ({ ...prev, refreshError: hasLoadedOnce.current }));
+          setState((prev) => ({
+            ...prev,
+            refreshError: hasLoadedOnce.current,
+          }));
         }
       });
 
@@ -82,5 +139,8 @@ export function useAgendaData() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { ...state, refetch: fetchAll };
+  return {
+    ...state,
+    refetch: fetchAll,
+  };
 }
