@@ -18,8 +18,16 @@ function getInitialYearMonth() {
 
 export default function AdminCalendarPage() {
   const supabase = useRef(createClient()).current;
-  const { settings, exceptions, loading, initialLoadError, refreshError, refetch } = useAgendaData();
   const [{ year, month }, setYearMonth] = useState(getInitialYearMonth());
+
+  const {
+    settings,
+    exceptions,
+    loading,
+    initialLoadError,
+    refreshError,
+    refetch,
+  } = useAgendaData(year, month);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
     null
