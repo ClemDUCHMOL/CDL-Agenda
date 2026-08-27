@@ -23,8 +23,10 @@ function getDefaultYearMonth(): { year: number; month: number } {
 
 export default function PublicPage() {
   const supabase = useRef(createClient()).current;
-  const { settings, exceptions, loading, initialLoadError, refreshError } = useAgendaData();
   const [{ year, month }, setYearMonth] = useState(getDefaultYearMonth());
+
+  const { settings, exceptions, loading, initialLoadError, refreshError } =
+    useAgendaData(year, month);
 
   const assetUrls = useMemo(() => {
     if (!settings) return { logoUrl: null, photoUrl: null, qrImageUrl: null };
