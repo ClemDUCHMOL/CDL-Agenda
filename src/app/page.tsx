@@ -43,13 +43,13 @@ export default function PublicPage() {
         <p className="text-center text-slate-400 text-sm mb-4">Chargement de l&apos;agenda…</p>
       )}
 
-      {initialLoadError && (
-        <WarningBanner message="Impossible de mettre à jour l'agenda. Les disponibilités affichées ne peuvent pas être vérifiées actuellement." />
-      )}
+{initialLoadError && (
+  <WarningBanner message="Impossible de vérifier les disponibilités. Veuillez actualiser la page (F5) et réessayer." />
+)}
 
-      {!initialLoadError && refreshError && (
-        <WarningBanner message="La mise à jour de l'agenda a échoué. Les disponibilités affichées peuvent ne plus être à jour." />
-      )}
+{!initialLoadError && refreshError && (
+  <WarningBanner message="L'agenda n'est pas à jour. Veuillez actualiser la page (F5) et réessayer." />
+)}
 
       {settings && !initialLoadError && (
         <>
