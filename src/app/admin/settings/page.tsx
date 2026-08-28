@@ -251,15 +251,15 @@ export default function AdminSettingsPage() {
                 checked={form.qr_mode === "generated"}
                 onChange={() => setForm({ ...form, qr_mode: "generated" as QrMode })}
               />
-              Générer depuis un lien
+              Générer depuis une URL ou une vCard
             </label>
             {form.qr_mode === "generated" && (
-              <input
-                type="url"
-                placeholder="Lien du QR code : https://..."
+              <textarea
+                placeholder={`Contenu du QR code : https://... ou BEGIN:VCARD\nVERSION:3.0\nFN:Nom Prénom\nEND:VCARD`}
                 value={form.qr_link ?? ""}
                 onChange={(e) => setForm({ ...form, qr_link: e.target.value })}
-                className="border border-slate-300 rounded-md px-3 py-2 text-sm ml-6"
+                rows={5}
+                className="border border-slate-300 rounded-md px-3 py-2 text-sm ml-6 font-mono"
               />
             )}
 
