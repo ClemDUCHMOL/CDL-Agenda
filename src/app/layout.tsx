@@ -3,7 +3,7 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
-  title: "Agenda de disponibilités",
+  title: "Agenda de mon CDL",
   description: "Consultez les créneaux disponibles pour un rendez-vous.",
 };
 
