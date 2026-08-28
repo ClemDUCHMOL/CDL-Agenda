@@ -68,7 +68,7 @@ export default function PublicPage() {
               settings={settings}
               exceptions={exceptions}
             />
-            <Legend />
+            <Legend showWeekends={settings.show_weekends} />
           </div>
 
           <p className="text-center text-sm text-slate-500 mt-6">

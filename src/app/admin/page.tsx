@@ -107,7 +107,7 @@ export default function AdminCalendarPage() {
           onToggleSlot={handleToggleSlot}
           pendingKey={pendingKey}
         />
-        <Legend />
+        <Legend showWeekends={settings.show_weekends} />
       </div>
 
       <BulkEditForm
