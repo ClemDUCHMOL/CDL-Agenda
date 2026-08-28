@@ -310,7 +310,7 @@ La page des paramètres permet de modifier :
 - activation de la photo ;
 - activation du QR code ;
 - mode du QR code ;
-- lien du QR code généré ;
+- contenu du QR code généré (URL ou vCard) ;
 - chemins des images stockées.
 
 La sauvegarde met à jour la ligne `settings` avec `id = 1` et actualise
@@ -331,8 +331,9 @@ le champ correspondant de `settings` est mis à jour.
 
 Deux modes existent :
 
-- `generated` : le QR code est généré côté client depuis `settings.qr_link` avec
-  la dépendance `qrcode` ;
+- `generated` : le QR code est généré côté client depuis le contenu de
+  `settings.qr_link` avec la dépendance `qrcode`. Ce contenu peut être une URL
+  ou une vCard ;
 - `uploaded` : l'image stockée dans Supabase Storage est affichée.
 
 ---
@@ -566,7 +567,8 @@ actualise `updated_at`, les navigateurs rechargent l'image après remplacement.
 ### QR code généré ou importé
 
 - Mode `generated` : génération côté client d'une data URL à partir de
-  `settings.qr_link`.
+  `settings.qr_link`. Ce champ conserve son nom historique, mais il représente
+  désormais le contenu à encoder dans le QR code : URL ou vCard.
 - Mode `uploaded` : affichage de l'image `settings.qr_image_path` stockée dans
   Supabase Storage.
 
@@ -831,7 +833,7 @@ Après déploiement ou en local avec `npm run dev`, vérifier :
     `auto_unavailable`.
 13. **En-tête** : logo, titre, photo et QR code activables séparément.
 14. **Images** : import, remplacement et suppression.
-15. **QR code** : mode généré depuis un lien et mode importé.
+15. **QR code** : mode généré depuis une URL ou une vCard, et mode importé.
 16. **Erreur Supabase simulée** : la page affiche un avertissement plutôt qu'un
     calendrier faussement disponible.
 17. **Responsive** : le calendrier reste lisible, avec défilement horizontal si
