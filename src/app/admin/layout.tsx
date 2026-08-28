@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabaseClient";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useRef(createClient()).current;
+
+  useEffect(() => {
+    document.title = "Admin CDL-Agenda";
+  }, []);
 
   if (pathname === "/admin/login") {
     return <>{children}</>;
